@@ -102,14 +102,40 @@ with tab2:
             col3.metric("⏳ In Progress", int(status_counts.get('inprogress', 0)))
             col4.metric("⏱️ Queued", int(status_counts.get('queued', 0)))
 
-            # Visualization 1: Status Pie Chart
-            st.subheader("📈 Pipeline Run Status Distribution")
-            pie_df = df['Status'].value_counts().reset_index()
-            pie_df.columns = ['Status', 'Count']
-            st.plotly_chart(
-                px.pie(pie_df, names='Status', values='Count', title="Pipeline Run Status"),
-                use_container_width=True
-            )
+            # Visualization 1 + 3: Status Pie Chart + Top Failing Pipelines
+            if 'Status' in df.columns and 'Pipeline name' in df.columns:
+                st.subheader("📊 Pipeline Run Summary")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    pie_df = df['Status'].value_counts().reset_index()
+                    pie_df.columns = ['Status', 'Count']
+                    fig_pie = px.pie(
+                        pie_df,
+                        names='Status',
+                        values='Count',
+                        title="Pipeline Run Status"
+                    )
+                    st.plotly_chart(fig_pie, use_container_width=True)
+
+                with col2:
+                    failed_counts = (
+                        df[df['Status'].str.lower() == 'failed']['Pipeline name']
+                        .value_counts()
+                        .nlargest(5)
+                        .reset_index()
+                    )
+                    failed_counts.columns = ['Pipeline name', 'Failure Count']
+                    fig_bar = px.bar(
+                        failed_counts,
+                        x='Pipeline name',
+                        y='Failure Count',
+                        title='Top 5 Failing Pipelines',
+                        text='Failure Count'
+                    )
+                    fig_bar.update_layout(xaxis={'categoryorder': 'total descending'})
+                    st.plotly_chart(fig_bar, use_container_width=True)
 
             # Visualization 2: Pipeline Execution Trend
             if 'Run start' in df.columns:
@@ -117,15 +143,17 @@ with tab2:
                 df['Date'] = df['Run start'].dt.date
                 daily_runs = df.groupby('Date').size().reset_index(name='Run Count')
 
-                st.subheader("📅 Pipeline Runs Over Time")
-                st.bar_chart(daily_runs.set_index('Date'))
-
-            # Visualization 3: Top Failing Pipelines
-            st.subheader("🔥 Top Failing Pipelines")
-            if 'Status' in df.columns:
-                failed_counts = df[df['Status'].str.lower() == 'failed']['Pipeline name'].value_counts().nlargest(10)
-                st.bar_chart(failed_counts)
-
+                st.subheader("📈 Pipeline Runs Over Time (Line Chart)")
+                fig = px.line(
+                    daily_runs,
+                    x='Date',
+                    y='Run Count',
+                    markers=True,
+                    title="Daily Pipeline Runs",
+                    labels={'Date': 'Date', 'Run Count': 'Number of Runs'}
+                )
+                fig.update_layout(xaxis=dict(type='category'))
+                st.plotly_chart(fig, use_container_width=True)
 
 # -------------------------------- TAB 3: About -------------------------------- #
 with tab3:
