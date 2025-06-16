@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
 import plotly.express as px
+import json
 
 
 # Load environment variables
@@ -20,7 +21,7 @@ st.set_page_config(page_title="ADF Logs Viewer", layout="wide")
 st.title("🔍 Azure Data Factory Toolkit")
 
 # Tabs
-tab1, tab2, tab3 = st.tabs(["📁 ADF CSV Analyzer", "📊 Dashboard", "ℹ️ About"])
+tab1, tab2, tab3, tab4 = st.tabs(["📁 ADF CSV Analyzer", "📊 Dashboard", "ℹ️ About", "View Active Failures"])
 
 # -------------------------------- TAB 1: CSV Analyzer -------------------------------- #
 with tab1:
@@ -167,3 +168,7 @@ with tab3:
     - Explore dashboards (coming soon).
 
     """)
+
+# --------------------------------- TAB 4: Active Failures -------------------------#
+with tab4:
+    st.header("Active Failures")
